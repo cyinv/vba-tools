@@ -1,0 +1,63 @@
+
+
+Sub XiongLinlin()
+    Application.DisplayAlerts = False
+    Application.ScreenUpdating = False
+    Dim body, i
+    Set d = CreateObject("scripting.dictionary")
+    threshold = Application.InputBox("发放金额阈值？（请把代发明细放在第一张表，企业名单放在第二张表）", Type:=1)
+    newSheetName = "当周抽奖资格客户名单"
+    For Each sh In Worksheets
+        If sh.Name = newSheetName Then
+            sh.Delete
+        End If
+    Next
+    
+    With Sheets(2)  ' build the dictionary first
+        body_ = .Range("C2:C" & .Cells(1, 1).End(xlDown).Row) ' get the body
+        For i = 1 To UBound(body_)
+            d.Item(body_(i, 1)) = 1
+        Next
+    End With
+    
+    keys = d.keys()
+    
+    With Sheets(1) ' for the source sheet
+        body = .Range("C2:J" & .Cells(1, 1).End(xlDown).Row) ' get the body, between column C to column J
+        rowss = Worksheets("Sheet2").Rows.Count
+        For Each rw In Worksheets("Sheet1").Rows
+            If rw.Row Mod 2 = 0 Then
+                
+            End If
+        Next rw
+        ' add a new sheet after the filter
+        Worksheets.Add after:=Sheets(Sheets.Count)
+        ActiveSheet.Name = newSheetName
+        Sheets(1).Rows(1).Copy
+        With Sheets(Sheets.Count).Rows(1)
+            .PasteSpecial Paste:=xlPasteFormats
+            .PasteSpecial Paste:=xlPasteValues
+        End With
+        rowNum = 2
+        For i = 1 To UBound(body)
+            If d.Exists(body(i, 1)) Then
+                If body(i, 8) = "" Then
+                ElseIf CDbl(body(i, 8)) >= CDbl(threshold) Then
+                    Sheets(1).Rows(i + 1).Copy
+                        With Sheets(Sheets.Count).Rows(rowNum)
+                            .PasteSpecial Paste:=xlPasteFormats
+                            .PasteSpecial Paste:=xlPasteValues
+                        End With
+                    rowNum = rowNum + 1
+                End If
+            End If
+        Next
+    End With
+    Application.DisplayAlerts = True
+    Application.ScreenUpdating = True
+    
+    MsgBox ("抽取完成！")
+End Sub
+
+
+

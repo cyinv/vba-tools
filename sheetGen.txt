@@ -1,0 +1,57 @@
+
+
+Sub XiongLinlin()
+    Application.DisplayAlerts = False
+    Application.ScreenUpdating = False
+    Dim body, i
+    Set d = CreateObject("scripting.dictionary")
+    sourceSheetIdx = InputBox("你要分第几个表？注意其余的表会被删除！")
+    targetSheetName = Sheets(1 * sourceSheetIdx).Name
+    For Each sh In Worksheets
+        If sh.Name <> targetSheetName Then
+            sh.Delete
+        End If
+    Next
+    
+    With Sheets(1)
+        body = .Range("a2:a" & .Cells(1, 1).End(xlDown).Row) ' get the body
+        For i = 1 To UBound(body) ' for each row, create a row index
+            d.Item(body(i, 1)) = 2
+        Next
+        keys = d.keys()
+        For i = 1 To d.Count ' for each element in the dictionary
+            Worksheets.Add after:=Sheets(Sheets.Count)
+            ActiveSheet.Name = keys(i - 1)
+            Sheets(1).Rows(1).Copy
+            With Sheets(Sheets.Count).Rows(1)
+                .PasteSpecial Paste:=xlPasteFormats
+                .PasteSpecial Paste:=xlPasteValues
+            End With
+        Next
+        
+        For i = 2 To UBound(body) + 1 ' for each row in the original sheet
+            sheetName = body(i - 1, 1)
+            rowNum = d.Item(sheetName)
+            d.Item(sheetName) = d.Item(sheetName) + 1
+            Sheets(1).Rows(i).Copy
+            With Sheets(sheetName).Rows(rowNum)
+                .PasteSpecial Paste:=xlPasteFormats
+                .PasteSpecial Paste:=xlPasteValues
+            End With
+        Next
+        
+        ' save all sheets to directory
+        For i = 2 To UBound(keys) + 2
+            Sheets(i).Copy
+            ActiveSheet.SaveAs ThisWorkbook.Path & "\" & keys(i - 2) & ".xlsx"
+            ActiveWorkbook.Close True
+        Next
+    End With
+    Sheets(1 * sourceSheetIdx).Select
+    Application.DisplayAlerts = True
+    Application.ScreenUpdating = True
+    
+    MsgBox ("切表完成！")
+End Sub
+
+
